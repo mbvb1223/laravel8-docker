@@ -1,0 +1,42 @@
+version: '3.7'
+
+services:
+  app:
+    image: nginx:1.16.1
+    container_name: l8_app
+    ports:
+      - "8989:80"
+    volumes:
+      - ./conf/app/etc/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
+      - ./src:/var/www/html
+
+  phpfpm:
+    container_name: l8_php
+    build: './dockerfile/phpfpm'
+    volumes:
+      - ./src:/var/www/html
+
+  mysql:
+    image: mysql:8.0
+    container_name: l8_mysql
+    volumes:
+      - ./mysql:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    environment:
+      MYSQL_DATABASE: mydatabase
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 123456
+      MYSQL_ROOT_PASSWORD: 123456
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: l8_phpmyadmin
+    links:
+      - mysql
+    environment:
+      PMA_HOST: l8_mysql
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - 8666:80
